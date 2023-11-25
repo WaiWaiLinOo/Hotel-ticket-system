@@ -1,7 +1,9 @@
 const express = require("express");
 const app = express();
 app.use(express.json());
-// let {data} = require('./dummy')
+const env = process.env.NODE_ENV
+require('dotenv').config({path:`.env.${env}`})
+const port = process.env.PORT
 let data = [
   { id: 1, name: "Hotel1" },
   { id: 2, name: "Hotel2" },
@@ -39,4 +41,4 @@ app.delete("/delete/:id", (req, res) => {
   data = [...result];
   res.json(data);
 });
-app.listen(4000, console.log("Hello port welcome naw"));
+app.listen(port, console.log(`Server is running,env file is ${env}, and port is ${port}`));
