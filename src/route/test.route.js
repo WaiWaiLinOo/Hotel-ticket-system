@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const {testController} = require('../controller')
+const {testController} = require('../controller/test.controller')
 let data = [
     { id: 1, name: "Hotel1" },
     { id: 2, name: "Hotel2" },
@@ -10,6 +10,7 @@ let data = [
 router.get("/", (req, res) => {
     res.json(data);
 });
+router.get('/route',testController)
 router.get("/get/:id", (req, res) => {
     const id = req.params.id;
     const result = data.filter((a) => a.id == id);
