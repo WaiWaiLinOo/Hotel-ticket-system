@@ -2,9 +2,9 @@ const db = require('../config/db_config');
 const sequelize = db.sequelize;
 const Career_level = db.tbl_career_level;
 
-const testData = async () => {
+const getAll = async () => {
     try {
-        const data = await sequelize.query(`Select * from [Marter_FA].[dbo].[tbl_career_level]`, {
+        const data = await sequelize.query(`Select * from [Hotel_Map].[dbo].[tbl_city]`, {
             type: sequelize.QueryTypes.SELECT
         });
         return data;
@@ -14,4 +14,4 @@ const testData = async () => {
     }
 };
 
-module.exports = { testData };
+module.exports = { getAll };

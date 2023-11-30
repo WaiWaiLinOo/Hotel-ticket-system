@@ -1,8 +1,8 @@
-const { testData } = require('../db/test');
+const { getAll } = require('../db/hotel');
 
-exports.testController = async (req, res) => {
+exports.getAllController = async (req, res) => {
     try {
-        const data = await testData();
+        const data = await getAll();
         res.json(data);
     } catch (error) {
         console.error('Error in testController:', error);

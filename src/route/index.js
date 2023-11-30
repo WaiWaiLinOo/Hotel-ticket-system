@@ -1,4 +1,4 @@
 const router = require('express').Router()
-const test = require('./test.route')
-router.use('/test',test)
+const hotel = require('./hotel.route')
+router.use('/hotel',hotel)
 module.exports = router

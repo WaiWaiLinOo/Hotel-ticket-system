@@ -1,14 +1,13 @@
+const { STRING } = require("sequelize");
+
 module.exports = (sequelize, Sequelize) => {
-    const careerLevel = sequelize.define('tbl_career_level', {
-        career_level_id: {
+    const city = sequelize.define('tbl_city', {
+        id: {
             type: Sequelize.INTEGER,
             primaryKey: true,
             autoIncrement: true
         },
-        career_level: {
-            type: Sequelize.INTEGER
-        },
-        remark: {
+        name: {
             type: Sequelize.STRING
         },
         active: {
@@ -17,10 +16,10 @@ module.exports = (sequelize, Sequelize) => {
     },
         {
             freezeTableName: true,
-            tableName: 'tbl_career_level'
+            tableName: 'tbl_city'
         });
 
-    return careerLevel;
+    return city;
 }
 
 
