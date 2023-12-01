@@ -4,7 +4,7 @@ const response = require('../config/response')
 exports.getAllController = async (req, res) => {
     try {
         const data = await getAll();
-        res.json(response( {
+        res.json(response{
             success: true,
             message: "Success!",
             payload: data
