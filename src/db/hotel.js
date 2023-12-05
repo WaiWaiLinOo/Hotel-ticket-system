@@ -4,7 +4,7 @@ const Career_level = db.tbl_career_level;
 
 const getAll = async () => {
     try {
-        const data = await sequelize.query(`select a.*,b.name as city_name from dbo.tbl_hotel as a inner join dbo.tbl_city as b ON a.city = b.id`, {
+        const data = await sequelize.query(`select a.*,b.name as city_name from tbl_hotel as a inner join tbl_city as b ON a.city = b.id`, {
             type: sequelize.QueryTypes.SELECT
         });
         return data;
