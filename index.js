@@ -8,7 +8,7 @@ require('dotenv').config({ path: `.env.${env}` })
 const port = process.env.PORT
 app.use('/v1', router)
 app.get('*', (req, res) => {
-  res.json({ msg: "Rout not found" })
+  res.json({ msg: "Rout not found " })
 })
 db.sequelize.sync();
 app.listen(port, () => {
