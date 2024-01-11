@@ -19,7 +19,7 @@ module.exports = (sequelize, Sequelize) => {
             tableName: 'tbl_city'
         });
 
-    return city;
+    return city ;
 }
 
 
