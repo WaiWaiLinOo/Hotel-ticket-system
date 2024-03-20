@@ -34,6 +34,9 @@ module.exports = (sequelize, Sequelize) => {
         city: {
             type: Sequelize.INTEGER
         },
+        user_id: {
+            type: Sequelize.INTEGER
+        },
         active: {
             type: Sequelize.INTEGER
         }
