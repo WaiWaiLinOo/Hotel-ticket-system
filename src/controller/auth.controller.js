@@ -31,7 +31,7 @@ exports.signup = async (req, res) => {
       role_id,
     });
     const user = await newUser.save();
-    const role = await Role.findOne({ id: user.role_id });
+    const role = await Role.findByPk( user.role_id );
 
     const modifiedUserResponse = {
       email: user.email,
