@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/auth.config");
 const db = require("../config/db_config");
 const User = db.tbl_user;
+const Role = db.tbl_role;
 
 const { TokenExpiredError } = jwt;
 
@@ -37,107 +38,63 @@ const verifyToken = (req, res, next) => {
              });
 };
 
-// isAdmin = async (req, res, next) => {
-//   try {
-//     const user = await User.findByPk(req.userId);
-//     const roles = await user.getRoles();
-
-//     for (let i = 0; i < roles.length; i++) {
-//       if (roles[i].name === "admin") {
-//         return next();
-//       }
-//     }
-
-//     return res.status(403).send({
-//       message: "Require Admin Role!",
-//     });
-//   } catch (error) {
-//     return res.status(500).send({
-//       message: "Unable to validate User role!",
-//     });
-//   }
-// };
-
 const isAdmin = (req, res, next) => {
+  // Find the user by their ID
   User.findByPk(req.userId).then(user => {
-    user.getRoles().then(roles => {
-      for (let i = 0; i < roles.length; i++) {
-        if (roles[i].name === "admin") {
-          next();
-          return;
-        }
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    // Assuming User model has a 'Role' association
+    user.getRole().then(role => {console.log("isrole>>>",role)
+      if (!role) {
+        return res.status(404).send({ message: "Role not found" });
       }
 
-      res.status(403).send({
-        message: "Require Admin Role!"
-      });
-      return;
+      // Check if the user's role is 'admin'
+      if (role.name === "admin") {
+        next(); // Allow access
+      } else {
+        res.status(403).send({ message: "Require Admin Role!" });
+      }
+    }).catch(err => {
+      console.error("Error:", err);
+      res.status(500).send({ message: "Internal Server Error" });
     });
+  }).catch(err => {
+    console.error("Error:", err);
+    res.status(500).send({ message: err });
   });
 };
-
-// isModerator = async (req, res, next) => {
-//   try {
-//     const user = await User.findByPk(req.userId);
-//     const roles = await user.getRoles();
-
-//     for (let i = 0; i < roles.length; i++) {
-//       if (roles[i].name === "moderator") {
-//         return next();
-//       }
-//     }
-
-//     return res.status(403).send({
-//       message: "Require Moderator Role!",
-//     });
-//   } catch (error) {
-//     return res.status(500).send({
-//       message: "Unable to validate Moderator role!",
-//     });
-//   }
-// };
 
 const isModerator = (req, res, next) => {
+  // Find the user by their ID
   User.findByPk(req.userId).then(user => {
-    user.getRoles().then(roles => {
-      for (let i = 0; i < roles.length; i++) {
-        if (roles[i].name === "moderator") {
-          next();
-          return;
-        }
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    // Assuming User model has a 'Role' association
+    user.getRole().then(role => {
+      if (!role) {
+        return res.status(404).send({ message: "Role not found" });
       }
 
-      res.status(403).send({
-        message: "Require Moderator Role!"
-      });
+      // Check if the user's role is 'admin'
+      if (role.name === "moderator") {
+        next(); // Allow access
+      } else {
+        res.status(403).send({ message: "Require Moderator Role!" });
+      }
+    }).catch(err => {
+      console.error("Error:", err);
+      res.status(500).send({ message: "Internal Server Error" });
     });
+  }).catch(err => {
+    console.error("Error:", err);
+    res.status(500).send({ message: "Internal Server Error" });
   });
 };
-
-// isModeratorOrAdmin = async (req, res, next) => {
-//   try {
-//     const user = await User.findByPk(req.userId);
-//     const roles = await user.getRoles();
-
-//     for (let i = 0; i < roles.length; i++) {
-//       if (roles[i].name === "moderator") {
-//         return next();
-//       }
-
-//       if (roles[i].name === "admin") {
-//         return next();
-//       }
-//     }
-
-//     return res.status(403).send({
-//       message: "Require Moderator or Admin Role!",
-//     });
-//   } catch (error) {
-//     return res.status(500).send({
-//       message: "Unable to validate Moderator or Admin role!",
-//     });
-//   }
-// };
 
 const isModeratorOrAdmin = (req, res, next) => {
   User.findByPk(req.userId).then(user => {
@@ -161,12 +118,6 @@ const isModeratorOrAdmin = (req, res, next) => {
   });
 };
 
-// const authJwt = {
-//   verifyToken,
-//   isAdmin,
-//   isModerator,
-//   isModeratorOrAdmin,
-// };
 const authJwt = {
   verifyToken: verifyToken,
   isAdmin: isAdmin,

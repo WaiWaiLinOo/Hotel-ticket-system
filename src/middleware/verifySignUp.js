@@ -54,32 +54,6 @@ checkRolesExisted = (req, res, next) => {
   next();
 };
 
-// checkRolesExisted = async (req, res, next) => {
-//   try {
-//     const roles = await ROLES.findAll();
-//     const roleNames = roles.map(role => role.name);
-//     console.log("role==",roles,roleNames)
-
-//     if (req.body.roles) {
-//       for (let i = 0; i < req.body.roles.length; i++) {
-//         if (!roleNames.includes(req.body.roles[i])) {
-//           res.status(400).send({
-//             message: "Failed! Role does not exist = " + req.body.roles[i]
-//           });
-//           return;
-//         }
-//       }
-//     }
-//     next();
-//   } catch (error) {
-//     console.error("Error checking roles:", error);
-//     res.status(500).send({
-//       message: "Internal server error"
-//     });
-//   }
-// };
-
-
 const verifySignUp = {
   checkDuplicateUsernameOrEmail,
   checkRolesExisted

@@ -26,19 +26,10 @@ db.tbl_hotel = require('../model/hotel.model')(sequelize, Sequelize);
 db.tbl_user = require('../model/user.model')(sequelize, Sequelize);
 db.tbl_role = require('../model/role.model')(sequelize, Sequelize);
 db.refreshToken = require("../model/refreshToken.model")(sequelize, Sequelize);
-// db.tbl_role.belongsToMany(db.tbl_user, {
-//   through: "user_roles",
-//   foreignKey: "roleId",
-//   otherKey: "userId"
-// });
-// db.tbl_user.belongsToMany(db.tbl_role, {
-//   through: "user_roles",
-//   foreignKey: "userId",
-//   otherKey: "roleId"
-// });
 
-db.tbl_role.hasOne(db.tbl_user, {foreignKey: 'role_id'});
-db.tbl_user.belongsTo(db.tbl_role);
+// Define associations here
+db.tbl_user.belongsTo(db.tbl_role, { foreignKey: 'role_id' });
+db.tbl_role.hasMany(db.tbl_user, { foreignKey: 'role_id' });
 
 db.refreshToken.belongsTo(db.tbl_user, {
   foreignKey: 'userId', targetKey: 'id'
@@ -57,5 +48,5 @@ db.tbl_user.hasOne(db.refreshToken, {
 //     console.error('Error truncating refresh tokens table:', error);
 //   });
 
-// db.Roles = ["user", "admin", "moderator"]
+// db.Roles = ["super_admin", "admin", "user", "moderator"]
 module.exports = db

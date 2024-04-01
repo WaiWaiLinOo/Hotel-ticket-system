@@ -14,12 +14,10 @@ module.exports = (sequelize, Sequelize) => {
         password: {
             type: Sequelize.STRING
         },
-        role_id: {
-            type: Sequelize.INTEGER
-        },
         active: {
             type: Sequelize.STRING
-        }
+        },
+        role_id: Sequelize.INTEGER
     },
         {
             freezeTableName: true,
