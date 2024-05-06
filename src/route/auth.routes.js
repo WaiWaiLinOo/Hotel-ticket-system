@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { verifySignUp } = require("../middleware");
 const controller = require("../controller/auth.controller");
+const { signUpValidation } = require('../helpers/validation')
 
 router.use(function(req, res, next) {
   res.header(
@@ -16,6 +17,7 @@ router.post(
     verifySignUp.checkDuplicateUsernameOrEmail,
     verifySignUp.checkRolesExisted
   ],
+  signUpValidation,
   controller.signup
 );
 

@@ -14,7 +14,7 @@ app.use(
     httpOnly: true,
   })
 );
-const router = require('./src/route')
+const router = require('./src/route') 
 const db = require('./src/config/db_config');
 const env = process.env.NODE_ENV
 require('dotenv').config({ path: `.env.${env}` })

@@ -1,37 +1,35 @@
 const db = require("../config/db_config");
 const config = require("../config/auth.config");
+const sequelize = db.sequelize;
 
 const { tbl_user: User, tbl_role: Role, refreshToken: RefreshToken } = db;
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const { validationResult } = require('express-validator');
 
 exports.signup = async (req, res) => {
-  try {
-    // Extract user data from the request body
-    const { username, email, password, role_id, active } = req.body;
-
+  const errors = validationResult(req);
+  if(!errors.isEmpty()){
+    return res.status(400).json({ errors: errors.array() });
+  }
+  else{
+    try {
+        // Extract user data from the request body
+        const { username, email, password, role_id, active } = req.body;
+      
     // Hash the password before saving it to the database
     const hashedPassword = bcrypt.hashSync(req.body.password, 8);
 
-    // Create the user record in the database
-    // const newUser = await db.tbl_user.create({
-    //     username,
-    //     email,
-    //     password: hashedPassword, // Save the hashed password
-    //     role_id,
-    //     active
-    // });
-    // console.log("newUser==",newUser)
     const newUser = new User({
-      email,
-      password: hashedPassword,
-      username,
-      active,
-      role_id,
-    });
-    const user = await newUser.save();
-    const role = await Role.findByPk( user.role_id );
+        email,
+        password: hashedPassword,
+        username,
+        active,
+        role_id,
+      });
+      const user = await newUser.save();
+      const role = await Role.findByPk( user.role_id );
 
     const modifiedUserResponse = {
       email: user.email,
@@ -39,20 +37,21 @@ exports.signup = async (req, res) => {
       active: user.active,
       role,
     };
-
+  
     // Send a success response
-    res.status(201).json({
-      message: "User created successfully",
-      user: modifiedUserResponse,
-    });
-  } catch (error) {
-    // Handle errors
-    console.error("Error creating user:", error);
-    res.status(500).json({
-      message: error.message,
-    });
+    return res.status(201).json({
+        message: "User created successfully",
+        user: modifiedUserResponse,
+      });
+    } catch (error) {
+        // Handle errors
+        console.error("Error creating user:", error);
+        return res.status(500).json({
+            message: error.message,
+          });
+        }
   }
-};
+      };
 
 exports.signin = (req, res) => {
   User.findOne({
