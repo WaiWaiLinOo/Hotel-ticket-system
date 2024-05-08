@@ -17,7 +17,13 @@ module.exports = (sequelize, Sequelize) => {
         active: {
             type: Sequelize.STRING
         },
-        role_id: Sequelize.INTEGER
+        role_id: Sequelize.INTEGER,
+        token: {
+            type: Sequelize.TEXT
+        },
+        image: {
+            type: Sequelize.STRING(500)
+        },
     },
         {
             freezeTableName: true,

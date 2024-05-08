@@ -7,6 +7,8 @@ const { tbl_user: User, tbl_role: Role, refreshToken: RefreshToken } = db;
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { validationResult } = require('express-validator');
+const randomstring = require('randomstring');
+const sendMail = require('../helpers/sendMail');
 
 exports.signup = async (req, res) => {
   const errors = validationResult(req);
@@ -16,33 +18,71 @@ exports.signup = async (req, res) => {
   else{
     try {
         // Extract user data from the request body
-        const { username, email, password, role_id, active } = req.body;
+        const { username, email, password, role_id, active, image } = req.body;
       
     // Hash the password before saving it to the database
     const hashedPassword = bcrypt.hashSync(req.body.password, 8);
 
-    const newUser = new User({
-        email,
-        password: hashedPassword,
-        username,
-        active,
-        role_id,
-      });
-      const user = await newUser.save();
-      const role = await Role.findByPk( user.role_id );
+    // const newUser = new User({
+    //     email,
+    //     password: hashedPassword,
+    //     username,
+    //     active,
+    //     role_id,
+    //   });
+    //   const user = await newUser.save();
+    //   const role = await Role.findByPk( user.role_id );
 
-    const modifiedUserResponse = {
-      email: user.email,
-      username: user.username,
-      active: user.active,
-      role,
-    };
+    // const modifiedUserResponse = {
+    //   email: user.email,
+    //   username: user.username,
+    //   active: user.active,
+    //   role,
+    // };
   
+    // let mailSubject = 'Mail Verification';
+    // const randomToken = randomstring.generate();
+    // let content = '<p>Hii ' +username+', \
+    // Please <a href="http://localhost:5000/v1/mail-verification?token='+randomToken+'"> Verify </a> your Mail.';
+    // sendMail(email, mailSubject, content);
+
+    // db.query('UPDATE users set token=? where email=?',[randomToken, email], function(error, result, fields){
+    //   if(error){
+    //     return res.status(400).send({
+    //       msg:err
+    //     })
+    //   }
+    // });
+    // // Send a success response
+    // return res.status(201).json({
+    //     message: "User created successfully",
+    //     user: modifiedUserResponse,
+    //   });
+    // Insert new user into tbl_user table using sequelize.query
+    const randomToken = randomstring.generate();
+    console.log("hi")
+    await sequelize.query(
+      `INSERT INTO users (username, email, password, role_id, active, token, image) VALUES (:username, :email, :password, :role_id, :active, :token, :image)`,
+      { replacements: { username, email, password: hashedPassword, role_id, active, token: randomToken, image: `images/${req.file.filename}` } }
+    );
+
+    // Find the role associated with the user
+    const [role] = await sequelize.query(
+      `SELECT * FROM roles WHERE id = :role_id LIMIT 1`,
+      { replacements: { role_id }, type: db.sequelize.QueryTypes.SELECT }
+    );
+
+    // Send email verification mail
+    const mailSubject = 'Mail Verification';
+    const content = `<p>Hii ${username}, Please <a href="http://localhost:5000/v1/mail-verification?token=`+randomToken+`"> Verify </a> your Mail.`;
+    await sendMail(email, mailSubject, content);
+
     // Send a success response
     return res.status(201).json({
-        message: "User created successfully",
-        user: modifiedUserResponse,
-      });
+      message: "User created successfully",
+      user: { email, username, active, role, image },
+    });
+
     } catch (error) {
         // Handle errors
         console.error("Error creating user:", error);
@@ -51,7 +91,7 @@ exports.signup = async (req, res) => {
           });
         }
   }
-      };
+};
 
 exports.signin = (req, res) => {
   User.findOne({
