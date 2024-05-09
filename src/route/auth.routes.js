@@ -67,12 +67,11 @@ const fileFilterConfig = function(req, file, cb) {
 
 const uploads = multer({ dest: 'uploads/' });
 
-router.post("/upload", uploads.single("file"), (req, res) => {
-  if (!req.file) {
-      return res.status(400).send('No file uploaded. Please attach a JPEG file under 5 MB.');
-  }
-  res.status(201).send("File uploaded successfully");
-});
+router.post(
+  "/user-file-upload",
+  controller.userDataUpload.single("file"),
+  controller.userFileUpload
+);
 
 router.post("/api/auth/signin", controller.signin);
 router.post("/api/auth/refreshtoken", controller.refreshToken);

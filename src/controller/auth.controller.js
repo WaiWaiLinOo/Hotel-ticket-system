@@ -1,7 +1,10 @@
 const db = require("../config/db_config");
 const config = require("../config/auth.config");
 const sequelize = db.sequelize;
-
+const multer = require("multer");
+const { v4: uuidv4 } = require('uuid');
+var fs = require('fs');
+const path = require('path')
 const { tbl_user: User, tbl_role: Role, refreshToken: RefreshToken } = db;
 
 const jwt = require("jsonwebtoken");
@@ -220,5 +223,45 @@ exports.signout = async (req, res) => {
     });
   } catch (err) {
     this.next(err);
+  }
+};
+
+let storage = multer.diskStorage({
+  destination: (req, file, cb)=> {        
+      var dir = './upload';
+      if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir);
+      }
+      cb(null, './upload')
+  },
+  filename:  (req, file, cb) =>{
+      let generatedName = uuidv4()+path.extname(file.originalname);
+      req.body.uploadFile =file;
+      cb(null, generatedName)        
+  }
+})
+
+exports.userDataUpload = multer({
+  limits: {
+      fileSize: 1024*1024*6, //6MB
+  }, 
+  storage: storage,
+  fileFilter:  (req, file, callback)=> {
+      var ext = path.extname(file.originalname);
+      if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg'&& ext !== '.pdf'&& ext !== '.xlsx'&& ext !== '.docx'&& ext !== '.txt') {
+          // return callback(new LocalizedError('error.upload.only_images_allowed'));
+      }
+      callback(null, true)
+  },
+})
+
+exports.userFileUpload = async (req, res, next) => {
+  try {
+    let uploadFileName = req.file?.filename;
+    return res.status(200).send({
+      message: uploadFileName,
+    });
+  } catch (error) {
+    next(error);
   }
 };
