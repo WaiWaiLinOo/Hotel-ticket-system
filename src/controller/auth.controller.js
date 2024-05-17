@@ -13,6 +13,47 @@ const { validationResult } = require('express-validator');
 const randomstring = require('randomstring');
 const sendMail = require('../helpers/sendMail');
 
+let storage = multer.diskStorage({
+  destination: (req, file, cb)=> {        
+      var dir = './upload';
+      if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir);
+      }
+      cb(null, './upload')
+  },
+  filename:  (req, file, cb) =>{
+      let generatedName = uuidv4()+path.extname(file.originalname);
+      req.body.uploadFile =file;
+      cb(null, generatedName)        
+  }
+})
+
+exports.userDataUpload = multer({
+  limits: {
+      fileSize: 1024*1024*6, //6MB
+  }, 
+  storage: storage,
+  fileFilter:  (req, file, callback)=> {
+      var ext = path.extname(file.originalname);
+      if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg'&& ext !== '.pdf'&& ext !== '.xlsx'&& ext !== '.docx'&& ext !== '.txt') {
+          // return callback(new LocalizedError('error.upload.only_images_allowed'));
+      }
+      callback(null, true)
+  },
+})
+
+exports.userFileUpload = async (req, res, next) => {
+  console.log("request.file==",req.file);
+  try {
+    let uploadFileName = req.file?.filename;
+    return res.status(200).send({
+      message: uploadFileName,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.signup = async (req, res) => {
   const errors = validationResult(req);
   if(!errors.isEmpty()){
@@ -20,53 +61,21 @@ exports.signup = async (req, res) => {
   }
   else{
     try {
+      console.log("hi")
         // Extract user data from the request body
-        const { username, email, password, role_id, active, image } = req.body;
+        const { username, email, password, role_id, active } = req.body;
+        const file = req.file ? req.file.filename : null;
+        console.log("reqbody===",req.body)
       
     // Hash the password before saving it to the database
     const hashedPassword = bcrypt.hashSync(req.body.password, 8);
 
-    // const newUser = new User({
-    //     email,
-    //     password: hashedPassword,
-    //     username,
-    //     active,
-    //     role_id,
-    //   });
-    //   const user = await newUser.save();
-    //   const role = await Role.findByPk( user.role_id );
-
-    // const modifiedUserResponse = {
-    //   email: user.email,
-    //   username: user.username,
-    //   active: user.active,
-    //   role,
-    // };
-  
-    // let mailSubject = 'Mail Verification';
-    // const randomToken = randomstring.generate();
-    // let content = '<p>Hii ' +username+', \
-    // Please <a href="http://localhost:5000/v1/mail-verification?token='+randomToken+'"> Verify </a> your Mail.';
-    // sendMail(email, mailSubject, content);
-
-    // db.query('UPDATE users set token=? where email=?',[randomToken, email], function(error, result, fields){
-    //   if(error){
-    //     return res.status(400).send({
-    //       msg:err
-    //     })
-    //   }
-    // });
-    // // Send a success response
-    // return res.status(201).json({
-    //     message: "User created successfully",
-    //     user: modifiedUserResponse,
-    //   });
     // Insert new user into tbl_user table using sequelize.query
     const randomToken = randomstring.generate();
     console.log("hi")
     await sequelize.query(
-      `INSERT INTO users (username, email, password, role_id, active, token, image) VALUES (:username, :email, :password, :role_id, :active, :token, :image)`,
-      { replacements: { username, email, password: hashedPassword, role_id, active, token: randomToken, image: `images/${req.file.filename}` } }
+      `INSERT INTO users (username, email, password, role_id, active, token, file) VALUES (:username, :email, :password, :role_id, :active, :token, :file)`,
+      { replacements: { username, email, password: hashedPassword, role_id, active, token: randomToken, file: file } }
     );
 
     // Find the role associated with the user
@@ -83,14 +92,14 @@ exports.signup = async (req, res) => {
     // Send a success response
     return res.status(201).json({
       message: "User created successfully",
-      user: { email, username, active, role, image },
+      user: { email, username, active, role, file: file },
     });
 
     } catch (error) {
         // Handle errors
         console.error("Error creating user:", error);
         return res.status(500).json({
-            message: error.message,
+            message: error.message
           });
         }
   }
@@ -226,42 +235,3 @@ exports.signout = async (req, res) => {
   }
 };
 
-let storage = multer.diskStorage({
-  destination: (req, file, cb)=> {        
-      var dir = './upload';
-      if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir);
-      }
-      cb(null, './upload')
-  },
-  filename:  (req, file, cb) =>{
-      let generatedName = uuidv4()+path.extname(file.originalname);
-      req.body.uploadFile =file;
-      cb(null, generatedName)        
-  }
-})
-
-exports.userDataUpload = multer({
-  limits: {
-      fileSize: 1024*1024*6, //6MB
-  }, 
-  storage: storage,
-  fileFilter:  (req, file, callback)=> {
-      var ext = path.extname(file.originalname);
-      if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg'&& ext !== '.pdf'&& ext !== '.xlsx'&& ext !== '.docx'&& ext !== '.txt') {
-          // return callback(new LocalizedError('error.upload.only_images_allowed'));
-      }
-      callback(null, true)
-  },
-})
-
-exports.userFileUpload = async (req, res, next) => {
-  try {
-    let uploadFileName = req.file?.filename;
-    return res.status(200).send({
-      message: uploadFileName,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
