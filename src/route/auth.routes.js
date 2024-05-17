@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { verifySignUp } = require("../middleware");
+const { checkDuplicateUsernameOrEmail,checkRolesExisted } = require("../middleware/verifySignUp");
 const controller = require("../controller/auth.controller");
 const { signUpValidation } = require("../helpers/validation");
 
@@ -11,19 +11,12 @@ router.use(function (req, res, next) {
   next();
 });
 
-// router.post(
-//   "/api/auth/signup",
-//   [verifySignUp.checkDuplicateUsernameOrEmail, verifySignUp.checkRolesExisted],
-//   upload.single("image"),
-//   signUpValidation,
-//   controller.signup
-// );
-
 router.post(
-  "/user-file-upload",
-  [verifySignUp.checkDuplicateUsernameOrEmail, verifySignUp.checkRolesExisted],
-  controller.userDataUpload.single("file"),
-  controller.userFileUpload,
+  "/api/auth/signup",
+  controller.userDataUpload.single("image"),
+  checkDuplicateUsernameOrEmail,
+  checkRolesExisted,
+  // controller.userFileUpload,
   signUpValidation,
   controller.signup
 );

@@ -61,39 +61,50 @@ exports.signup = async (req, res) => {
   }
   else{
     try {
-      console.log("hi")
         // Extract user data from the request body
         const { username, email, password, role_id, active } = req.body;
-        const file = req.file ? req.file.filename : null;
+        const image = req.file ? req.file.filename : null;
         console.log("reqbody===",req.body)
       
     // Hash the password before saving it to the database
     const hashedPassword = bcrypt.hashSync(req.body.password, 8);
+    const newUser = new User({
+        email,
+        password: hashedPassword,
+        username,
+        active,
+        role_id,
+        image: image,
+      });
+      const user = await newUser.save();
+      const role = await Role.findByPk( user.role_id );
 
-    // Insert new user into tbl_user table using sequelize.query
+    const modifiedUserResponse = {
+      email: user.email,
+      username: user.username,
+      active: user.active,
+      role,
+      image,
+    };
+
+    let mailSubject = 'Mail Verification';
     const randomToken = randomstring.generate();
-    console.log("hi")
+    let content = '<p>Hii ' +username+', \
+    Please <a href="http://localhost:5000/v1/mail-verification?token='+randomToken+'"> Verify </a> your Mail.';
+    sendMail(email, mailSubject, content);
+
     await sequelize.query(
-      `INSERT INTO users (username, email, password, role_id, active, token, file) VALUES (:username, :email, :password, :role_id, :active, :token, :file)`,
-      { replacements: { username, email, password: hashedPassword, role_id, active, token: randomToken, file: file } }
+      'UPDATE users SET token = :token WHERE email = :email',
+      {
+        replacements: { token: randomToken, email: email },
+        type: sequelize.QueryTypes.UPDATE
+      }
     );
-
-    // Find the role associated with the user
-    const [role] = await sequelize.query(
-      `SELECT * FROM roles WHERE id = :role_id LIMIT 1`,
-      { replacements: { role_id }, type: db.sequelize.QueryTypes.SELECT }
-    );
-
-    // Send email verification mail
-    const mailSubject = 'Mail Verification';
-    const content = `<p>Hii ${username}, Please <a href="http://localhost:5000/v1/mail-verification?token=`+randomToken+`"> Verify </a> your Mail.`;
-    await sendMail(email, mailSubject, content);
-
     // Send a success response
     return res.status(201).json({
-      message: "User created successfully",
-      user: { email, username, active, role, file: file },
-    });
+        message: "User created successfully",
+        user: modifiedUserResponse,
+      });
 
     } catch (error) {
         // Handle errors

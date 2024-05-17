@@ -21,7 +21,7 @@ module.exports = (sequelize, Sequelize) => {
         token: {
             type: Sequelize.TEXT
         },
-        file: {
+        image: {
             type: Sequelize.STRING(500)
         },
     },

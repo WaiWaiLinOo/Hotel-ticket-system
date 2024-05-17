@@ -1,26 +1,31 @@
 const db = require("../config/db_config");
+const sequelize = db.sequelize;
 const ROLES = db.Roles;
 const User = db.tbl_user;
 
-checkDuplicateUsernameOrEmail = async (req, res, next) => {
+exports.checkDuplicateUsernameOrEmail = async (req, res, next) => {
   try {
     // Username
-    let user = await User.findOne({
-      where: {
-        username: req.body.username
-      }
-    });
+    const { username, email } = req.body 
+
+    if (!username || !email) {
+      return res.status(400).send({
+        message: "Username and email are required!"
+      });
+    }
+    // let user = await sequelize.query(
+    //   `SELECT * FROM users WHERE username = '${username}';`,
+    // );
+    let user = await User.findOne({ where: { username } });
 
     if (user) {
-      return res.status(400).send({
-        message: "Failed! Username is already in use!"
-      });
+      return res.status(400).send({ message: "Failed! Username is already in use!" });
     }
 
     // Email
     user = await User.findOne({
       where: {
-        email: req.body.email
+        email
       }
     });
 
@@ -39,7 +44,7 @@ checkDuplicateUsernameOrEmail = async (req, res, next) => {
   }
 };
 
-checkRolesExisted = (req, res, next) => {
+exports.checkRolesExisted = (req, res, next) => {
   if (req.body.roles) {
     for (let i = 0; i < req.body.roles.length; i++) {
       if (!ROLES.includes(req.body.roles[i])) {
@@ -50,13 +55,13 @@ checkRolesExisted = (req, res, next) => {
       }
     }
   }
-  
+
   next();
 };
 
-const verifySignUp = {
-  checkDuplicateUsernameOrEmail,
-  checkRolesExisted
-};
+// const verifySignUp = {
+//   checkDuplicateUsernameOrEmail,
+//   checkRolesExisted
+// };
 
-module.exports = verifySignUp;
+// module.exports = verifySignUp;
