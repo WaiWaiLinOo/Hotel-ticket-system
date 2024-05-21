@@ -2,10 +2,16 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const cookieSession = require("cookie-session");
+const path = require('path');
 app.use(cors());
 app.use(express.json()); // to get json in body request
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
+// Define the path to the uploads directory
+const uploadsDir = path.join(__dirname, 'upload');
+
+// Serve static files from the uploads directory
+app.use('/upload', express.static(uploadsDir));
 app.use(
   cookieSession({
     name: "bezkoder-session",

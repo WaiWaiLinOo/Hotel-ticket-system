@@ -63,7 +63,7 @@ exports.signup = async (req, res) => {
     try {
         // Extract user data from the request body
         const { username, email, password, role_id, active } = req.body;
-        const image = req.file ? req.file.filename : null;
+        const image =  req.file ? `/upload/${req.file.filename}` : null;
         console.log("reqbody===",req.body)
       
     // Hash the password before saving it to the database
