@@ -120,7 +120,7 @@ exports.signin = (req, res) => {
   User.findOne({
     include: [{ model: db.tbl_role }],
     where: {
-      username: req.body.username,
+      email: req.body.email,
     },
   })
     .then(async (user) => {
@@ -179,6 +179,7 @@ exports.signin = (req, res) => {
         roles: authorities,
         accessToken: token,
         refreshToken: refreshToken,
+        image: user.image
       });
     })
   // })

@@ -8,7 +8,7 @@ exports.checkDuplicateUsernameOrEmail = async (req, res, next) => {
     // Username
     const { username, email } = req.body 
 
-    if (!username || !email) {
+    if (!username && !email) {
       return res.status(400).send({
         message: "Username and email are required!"
       });
