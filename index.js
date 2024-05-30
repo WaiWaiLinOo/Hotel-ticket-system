@@ -3,7 +3,11 @@ const app = express();
 const cors = require("cors");
 const cookieSession = require("cookie-session");
 const path = require('path');
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+  })
+);
 app.use(express.json()); // to get json in body request
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));

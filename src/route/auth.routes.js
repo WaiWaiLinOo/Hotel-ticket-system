@@ -1,7 +1,11 @@
 const router = require("express").Router();
+const bodyParser = require('body-parser');
+router.use(bodyParser.json());
+router.use(bodyParser.urlencoded({ extended: true }));
 const { checkDuplicateUsernameOrEmail,checkRolesExisted } = require("../middleware/verifySignUp");
 const controller = require("../controller/auth.controller");
 const { signUpValidation } = require("../helpers/validation");
+const { forgotPassword, resetPassword } = require("../controller/resetPassword.controller");
 
 router.use(function (req, res, next) {
   res.header(
@@ -21,9 +25,11 @@ router.post(
   controller.signup
 );
 
+router.post("/forgotPassword", forgotPassword);
 router.post("/api/auth/signin", controller.signin);
 router.post("/api/auth/refreshtoken", controller.refreshToken);
 
 router.post("/api/auth/signout", controller.signout);
+router.post("/resetPassword", resetPassword);
 
 module.exports = router;
