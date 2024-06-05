@@ -6,6 +6,7 @@ const { checkDuplicateUsernameOrEmail,checkRolesExisted } = require("../middlewa
 const controller = require("../controller/auth.controller");
 const { signUpValidation } = require("../helpers/validation");
 const { forgotPassword, resetPassword } = require("../controller/resetPassword.controller");
+const { authJwt } = require("../middleware")
 
 router.use(function (req, res, next) {
   res.header(
@@ -29,7 +30,7 @@ router.post("/forgotPassword", forgotPassword);
 router.post("/api/auth/signin", controller.signin);
 router.post("/api/auth/refreshtoken", controller.refreshToken);
 
-router.post("/api/auth/signout", controller.signout);
+router.post("/api/auth/signout", [authJwt.verifyToken], controller.signout);
 router.post("/resetPassword", resetPassword);
 
 module.exports = router;

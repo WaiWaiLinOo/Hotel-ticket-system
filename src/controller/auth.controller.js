@@ -11,7 +11,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { validationResult } = require('express-validator');
 const randomstring = require('randomstring');
-const sendMail = require('../helpers/sendMail');
+const { sendMail } = require('../helpers/sendMail');
 
 let storage = multer.diskStorage({
   destination: (req, file, cb)=> {        
@@ -89,8 +89,8 @@ exports.signup = async (req, res) => {
 
     let mailSubject = 'Mail Verification';
     const randomToken = randomstring.generate();
-    let content = '<p>Hii ' +username+', \
-    Please <a href="http://localhost:5000/v1/mail-verification?token='+randomToken+'"> Verify </a> your Mail.';
+    let content = `<p>Hi ${username}, 
+    Please <a href="http://localhost:3000/mail-verification?username=${username}&token=${randomToken}"> Verify </a> your email.</p>`;    
     sendMail(email, mailSubject, content);
 
     await sequelize.query(
@@ -238,6 +238,14 @@ exports.refreshToken = async (req, res) => {
 
 exports.signout = async (req, res) => {
   try {
+    const userId = req.userId;
+console.log("userId==",userId)
+    // Delete all refresh tokens associated with the user
+    await RefreshToken.destroy({
+      where: { userId: userId }
+    });
+
+    // Destroy the session
     req.session = null;
     return res.status(200).send({
       message: "You've been signed out!",

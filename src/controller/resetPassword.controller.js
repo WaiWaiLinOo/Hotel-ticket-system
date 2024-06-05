@@ -2,29 +2,23 @@ require("dotenv").config();
 const db = require("../config/db_config");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
-const sequelize = db.sequelize;
 const { sendForgetPasswordMail, mailTemplate } = require('../helpers/sendMail');
 const NumSaltRounds = Number(process.env.NO_OF_SALT_ROUNDS);
 const { tbl_user: User, resetToken : ResetToken } = db;
 
-
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-        console.log("email==",email)
+
         if (!email) {
             return res.status(400).json({
                 success: false,
                 message: "Email is required"
             });
         }
-
-        console.log("Received email: ", email);
-
         const user = await User.findOne({
             where: { email },
         });
-        console.log("user===",user.id)
         if (!user || user.length === 0) {
           res.json({
             success: false,
@@ -69,12 +63,12 @@ exports.forgotPassword = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   try {
-    const { password, token, userId } = req.body;
-    console.log("req===",req.body)
+    const { password, token, user_id } = req.body;
+
     // Fetch the most recent reset token for the user
     const userToken = await ResetToken.findOne({
-      where: { userId },
-      order: [['createdAt', 'DESC']],
+      where: { user_id },
+      order: [['created_at', 'DESC']],
     });
 
     if (!userToken) {
@@ -85,7 +79,7 @@ exports.resetPassword = async (req, res) => {
     }
 
     const currDateTime = new Date();
-    const expiresAt = new Date(userToken.expiresAt);
+    const expiresAt = new Date(userToken.expires_at);
 
     if (currDateTime > expiresAt) {
       return res.json({
@@ -102,14 +96,14 @@ exports.resetPassword = async (req, res) => {
     }
 
     // Delete the used reset token
-    await ResetToken.destroy({ where: { userId } });
+    await ResetToken.destroy({ where: { user_id } });
 
     // Hash the new password
     const salt = await bcrypt.genSalt(NumSaltRounds);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Update the user's password
-    await User.update({ password: hashedPassword }, { where: { id: userId } });
+    await User.update({ password: hashedPassword }, { where: { id: user_id } });
 
     return res.json({
       success: true,
