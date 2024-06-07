@@ -145,32 +145,13 @@ exports.signin = (req, res) => {
       });
 
       let refreshToken = await RefreshToken.createToken(user);
-
-      // let authorities = [];
       console.log("role====", user);
-      // user.getRoles().then(roles => {
-      //   for (let i = 0; i < roles.length; i++) {
-      //     authorities.push("ROLE_" + roles[i].name.toUpperCase());
-      //   }
 
-      //   res.status(200).send({
-      //     id: user.id,
-      //     username: user.username,
-      //     email: user.email,
-      //     roles: authorities,
-      //     role_id: user.role_id,
-      //     active: user.active,
-      //     accessToken: token,
-      //     refreshToken: refreshToken,
-      //   });
-      // });
-      // const roles = await user.s(); // Assuming the method name is getTbl_role
-
-      // const authorities = roles.map(role => "ROLE_" + role.name.toUpperCase());
       const authorities = user.role.name.toUpperCase();
       console.log("rolesquh==",user.role.name.toUpperCase(),authorities)
 
       res.status(200).send({
+        user: {
         id: user.id,
         username: user.username,
         email: user.email,
@@ -180,10 +161,9 @@ exports.signin = (req, res) => {
         accessToken: token,
         refreshToken: refreshToken,
         image: user.image
+        }
       });
-    })
-  // })
-    .catch((err) => {
+    }).catch((err) => {
       res.status(500).send({ message: err.message });
     });
 };
