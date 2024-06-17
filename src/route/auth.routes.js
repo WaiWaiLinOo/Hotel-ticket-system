@@ -4,7 +4,7 @@ router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
 const { checkDuplicateUsernameOrEmail,checkRolesExisted } = require("../middleware/verifySignUp");
 const controller = require("../controller/auth.controller");
-const { signUpValidation } = require("../helpers/validation");
+const { signUpValidation, updateProfileValidation } = require("../helpers/validation");
 const { forgotPassword, resetPassword } = require("../controller/resetPassword.controller");
 const { authJwt } = require("../middleware")
 
@@ -32,5 +32,8 @@ router.post("/api/auth/refreshtoken", controller.refreshToken);
 
 router.post("/api/auth/signout", [authJwt.verifyToken], controller.signout);
 router.post("/resetPassword", resetPassword);
+router.get("/get-users", [authJwt.verifyToken], controller.getUser);
+router.get("/get-user", [authJwt.isAuthorize], controller.getUser);
+router.post("/update-profile", controller.userDataUpload.single("image"), updateProfileValidation, [authJwt.isAuthorize], controller.updateProfile);
 
 module.exports = router;

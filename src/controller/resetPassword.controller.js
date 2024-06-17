@@ -30,6 +30,7 @@ exports.forgotPassword = async (req, res) => {
             .createHash("sha256")
             .update(token)
             .digest("hex");
+          await ResetToken.destroy({ where : { user_id : user.id}})
           await ResetToken.create({
             user_id: user.id,
             token: resetToken,

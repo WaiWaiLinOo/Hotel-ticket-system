@@ -145,16 +145,18 @@ exports.signin = (req, res) => {
       });
 
       let refreshToken = await RefreshToken.createToken(user);
-      console.log("role====", user);
+      console.log("role====", user,"\nrefreshtoken",refreshToken);
 
       const authorities = user.role.name.toUpperCase();
       console.log("rolesquh==",user.role.name.toUpperCase(),authorities)
 
       res.status(200).send({
+        msg: "Logged In",
         user: {
         id: user.id,
         username: user.username,
         email: user.email,
+        password: user.password,
         role_id: user.role_id,
         active: user.active,
         roles: authorities,
@@ -180,7 +182,7 @@ exports.refreshToken = async (req, res) => {
       where: { token: requestToken },
     });
 
-    console.log("refreshtoken===", refreshToken);
+    console.log("refreshtoken===", refreshToken.id);
 
     if (!refreshToken) {
       return res
@@ -235,3 +237,74 @@ console.log("userId==",userId)
   }
 };
 
+exports.getUser = async (req, res) => {
+  try {
+  const authToken = req.headers.authorization.split(' ')[1];
+  // const authToken = req.headers["x-access-token"];
+  console.log("auth===",authToken)
+    if (!authToken) {
+      return res.status(401).send({ success: false, message: "No token provided!" });
+    }
+  const decode = jwt.verify(authToken, config.secret);
+
+  const user = await sequelize.query(`SELECT * FROM users where id = :id`,
+    {
+      replacements: { id: decode.id },
+      type: sequelize.QueryTypes.SELECT,
+    }
+  );
+  
+  if (!user.length) {
+    return res.status(404).send({ success: false, message: "User not found" });
+  }
+
+  return res.status(200).send({ success: true, data: user[0], message: "Fetch Successfully!" });
+} catch (error) {
+  console.error('Error fetching user:', error);
+  return res.status(500).send({ success: false, message: "Internal server error" });
+}
+
+};
+
+exports.updateProfile = async (req, res) => {
+
+  try{
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const authToken = req.headers.authorization.split(' ')[1];
+    const decoded = jwt.verify(authToken, config.secret);
+
+    var sql = '',data;
+
+    // if( req.file != undefined){
+    //   sql = `UPDATE users SET name = ? , email = ?, image = ?, where id=?`;
+    //   data = [req.body.username, req.body.email, 'upload/' + req.file.filename, decode.id]
+    // }
+    // else{
+    //   sql = `UPDATE users SET name = ? , email = ? where id=?`;
+    //   data = [req.body.username, req.body.email, decode.id]
+    // }
+
+    // db.query(sql, data, function(error, result, fields){
+    //   if(error){
+    //     res.status(400).send({msg: error});
+    //   }
+    //   res.status(200).send({msg: "Profile Updated Successfully!"});
+    // });
+    if (req.file !== undefined) {
+      sql = `UPDATE users SET username = :username, email = :email, image = :image WHERE id = :id`;
+      data = { username: req.body.username, email: req.body.email, image: '/upload/' + req.file.filename, id: decoded.id };
+    } else {
+      sql = `UPDATE users SET username = :username, email = :email WHERE id = :id`;
+      data = { username: req.body.username, email: req.body.email, id: decoded.id };
+    }
+  
+    await sequelize.query(sql, { replacements: data, type: sequelize.QueryTypes.UPDATE });
+    res.status(200).send({ msg: "Profile Updated Successfully!" });
+  }catch(error){
+    return res.status(400).json({ msg : error.message });
+  }
+};
