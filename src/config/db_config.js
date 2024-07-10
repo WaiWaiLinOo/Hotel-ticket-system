@@ -27,6 +27,7 @@ db.tbl_user = require('../model/user.model')(sequelize, Sequelize);
 db.tbl_role = require('../model/role.model')(sequelize, Sequelize);
 db.refreshToken = require("../model/refreshToken.model")(sequelize, Sequelize);
 db.resetToken = require("../model/resetToken.model")(sequelize, Sequelize);
+db.images = require("../model/image.model")(sequelize, Sequelize);
 
 // Define associations here
 db.tbl_user.belongsTo(db.tbl_role, { foreignKey: 'role_id' });
