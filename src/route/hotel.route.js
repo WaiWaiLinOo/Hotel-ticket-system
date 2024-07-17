@@ -8,7 +8,7 @@ const {
   updateHotelList,
   deleteHotelDataById,
 } = require("../controller/hotel.controller");
-const { uploadMiddleware, createImages, getAllImagesData, getImageDataById, updatedDataImage, deleteImageDataById } = require("../controller/hotelImage.controller");
+const { uploadMiddleware, createImages, getAllImagesData, getImageDataById, updatedDataImage, deleteImageDataById, deleteImageDataByIds } = require("../controller/hotelImage.controller");
 
 // Additional middleware
 router.use((req, res, next) => {
@@ -47,5 +47,6 @@ router.get("/all-images", getAllImagesData);
 router.get("/image-id/:id", getImageDataById);
 router.patch("/update-image", updatedDataImage);
 router.delete("/delete-image/:id",deleteImageDataById)
+router.delete("/delete-images", deleteImageDataByIds);
 
 module.exports = router;

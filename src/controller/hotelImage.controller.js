@@ -81,7 +81,7 @@ exports.createImages = async (req, res) => {
     res.json(response({
       success: true,
       message: "ImageFile upload successful!",
-      payload: null
+      payload: imageData
     }));
 
   } catch (error) {
@@ -155,7 +155,7 @@ exports.deleteImageDataById = async (req, res) => {
   const id = req.params.id;
   console.log("iddeltete>>>===",id)
   try {
-    const data = await getDeleteImageById(id);
+    const data = await getDeleteImageById(id, uploadDir);
     res.json(
       response({
         success: true,
@@ -165,6 +165,32 @@ exports.deleteImageDataById = async (req, res) => {
     );
   } catch (error) {
     console.error("Error in deleting image by Id", error);
+    res.status(500).json({ success: false, message: error });
+  }
+};
+
+exports.deleteImageDataByIds = async (req, res) => {
+  console.log("re===",req.body.map(value =>value.id))
+  const ids = req.body.map(value => value.id);
+  console.log("ids to delete>>>===", ids);
+  
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ success: false, message: "Invalid IDs array" });
+  }
+
+  try {
+    const deletePromises = ids.map(id => getDeleteImageById(id, uploadDir));
+    const results = await Promise.all(deletePromises);
+
+    res.json(
+      response({
+        success: true,
+        message: "Images deleted successfully!",
+        payload: results,
+      })
+    );
+  } catch (error) {
+    console.error("Error in deleting images by IDs", error);
     res.status(500).json({ success: false, message: error });
   }
 };

@@ -1,19 +1,20 @@
 const db = require("../config/db_config");
 const sequelize = db.sequelize;
+const fs = require('fs');
+const path = require('path');
 const { images : Image } = db;
-
 const saveImage = async (files) => {
   try {
     const promises = files.map(async (file) => {
 
-      const { originalname, mimetype, path } = file;
+      const { filename, mimetype, path } = file;
       console.log("file====",file)
    
       const query = `
         INSERT INTO image (type, name, data)
         VALUES (?, ?, ?)
       `;
-      const values = [mimetype, originalname, path];
+      const values = [mimetype, filename, path];
 
       // Execute the raw query
       const [result, metadata] = await sequelize.query(query, {
@@ -84,24 +85,44 @@ const updateImage = async (imageId, newData) => {
   }
 };
 
-const getDeleteImageById = async (id) => {
+const getDeleteImageById = async (id, uploadDir) => {
+  console.log("uploadDir====", uploadDir);
   try {
-    const data = await sequelize.query(
+    // Retrieve the image data before deletion to get the file name
+    const [imageData] = await sequelize.query(
+      `
+        SELECT name FROM image WHERE id = :id
+      `,
+      {
+        replacements: { id },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+    console.log("image===",imageData)
+
+    if (!imageData) {
+      throw new Error(`Image with ID ${id} not found`);
+    }
+
+    const filePath = path.join(uploadDir, imageData.name);
+    console.log("filepath===",filePath)
+    // Delete the image record from the database
+    await sequelize.query(
       `
         DELETE FROM image WHERE id = :id
-        `,
+      `,
       {
         replacements: { id },
         type: sequelize.QueryTypes.DELETE,
       }
     );
-    console.log("id delete== ", data);
-    if(data == undefined){
-      return getAllImages()
-    }else{
-      return console.log("error in deleting")
+
+    // Delete the image file from the local folder
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
     }
-    // return data;
+
+    return { id, success: true, message: `Delete image for both database and local folder in id= ${id}` };
   } catch (error) {
     console.error("Error deleting data with id", error);
     throw error;
