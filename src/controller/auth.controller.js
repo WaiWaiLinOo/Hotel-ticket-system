@@ -62,7 +62,7 @@ exports.signup = async (req, res) => {
   else{
     try {
         // Extract user data from the request body
-        const { username, email, password, role_id, active } = req.body;
+        const { username, email, password, phone, role_id, active } = req.body;
         const image =  req.file ? `/upload/${req.file.filename}` : null;
         console.log("reqbody===",req.body)
       
@@ -72,6 +72,7 @@ exports.signup = async (req, res) => {
         email,
         password: hashedPassword,
         username,
+        phone,
         active,
         role_id,
         image: image,
@@ -83,6 +84,7 @@ exports.signup = async (req, res) => {
       email: user.email,
       username: user.username,
       active: user.active,
+      phone: user.phone,
       role,
       image,
     };
@@ -157,6 +159,7 @@ exports.signin = (req, res) => {
         username: user.username,
         email: user.email,
         password: user.password,
+        phone: user.phone,
         role_id: user.role_id,
         active: user.active,
         roles: authorities,
