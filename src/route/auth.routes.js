@@ -33,7 +33,7 @@ router.post("/api/auth/refreshtoken", controller.refreshToken);
 router.post("/api/auth/signout", [authJwt.verifyToken], controller.signout);
 router.post("/resetPassword", resetPassword);
 router.get("/get-users", [authJwt.verifyToken], controller.getUser);
-router.get("/get-user", [authJwt.isAuthorize], controller.getUser);
+router.get("/get-allusers", [authJwt.isAuthorize], controller.geAlltUser);
 router.post("/update-profile", controller.userDataUpload.single("image"), updateProfileValidation, [authJwt.isAuthorize], controller.updateProfile);
 
 module.exports = router;

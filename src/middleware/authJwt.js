@@ -16,13 +16,13 @@ const catchError = (err, res) => {
 
 const verifyToken = (req, res, next) => {
   // let token = req.session.token;
-  let token = req.headers["x-access-token"];
+  let authHeader = req.headers["x-access-token"];
 
-  if (!token) {
-    return res.status(403).send({
-      message: "No token provided!",
-    });
+  if (!authHeader || !authHeader.startsWith('Bearer ') || !authHeader.split(' ')[1]) {
+    return res.status(403).send({ message: "No token & x-access-token provided!" });
   }
+
+  const token = authHeader.split(' ')[1];
 
   jwt.verify(token,
              config.secret,
@@ -118,24 +118,24 @@ const isModeratorOrAdmin = (req, res, next) => {
   });
 };
 
-const isAuthorize = async(req, res, next) => {
-  try{
-    if(
-      !req.headers.authorization ||
-      !req.headers.authorization.startsWith('Bearer') || 
-      !req.headers.authorization.split(' ')[1]
-    ){
+const isAuthorize = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || req.headers['x-auth-token'];
+    console.log("Authorization header: ", authHeader);
+
+    if (!authHeader || !authHeader.startsWith('Bearer') || !authHeader.split(' ')[1]) {
       return res.status(422).json({
-        message: "Please provide token"
+        message: "Please provide Bearer & x-auth-token token"
       });
     }
 
     next();
-
-  }catch(error){
-    console.log(error.message)
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 const authJwt = {
   verifyToken: verifyToken,

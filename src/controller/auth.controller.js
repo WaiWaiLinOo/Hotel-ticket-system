@@ -150,7 +150,7 @@ exports.signin = (req, res) => {
       console.log("role====", user,"\nrefreshtoken",refreshToken);
 
       const authorities = user.role.name.toUpperCase();
-      console.log("rolesquh==",user.role.name.toUpperCase(),authorities)
+      console.log("rolesquh==",user.role.name.toUpperCase(),authorities)  
 
       res.status(200).send({
         msg: "Logged In",
@@ -169,57 +169,58 @@ exports.signin = (req, res) => {
         }
       });
     }).catch((err) => {
+      console.log("error for signin==",err.message)
       res.status(500).send({ message: err.message });
     });
 };
 
 exports.refreshToken = async (req, res) => {
-  try {
-    const { refreshToken: requestToken } = req.body;
+    try {
+      const { refreshToken: requestToken } = req.body;
 
-    if (!requestToken) {
-      return res.status(403).json({ message: "Refresh Token is required!" });
-    }
+      if (!requestToken) {
+        return res.status(403).json({ message: "Refresh Token is required!" });
+      }
 
-    const refreshToken = await RefreshToken.findOne({
-      where: { token: requestToken },
-    });
+      const refreshToken = await RefreshToken.findOne({
+        where: { token: requestToken },
+      });
 
-    console.log("refreshtoken===", refreshToken.id);
+      console.log("refreshtoken===", refreshToken.id);
 
-    if (!refreshToken) {
+      if (!refreshToken) {
+        return res
+          .status(403)
+          .json({ message: "Refresh token is not in the database!" });
+      }
+
+      if (RefreshToken.verifyExpiration(refreshToken)) {
+        await RefreshToken.destroy({ where: { id: refreshToken.id } });
+        return res
+          .status(403)
+          .json({
+            message:
+              "Refresh token has expired. Please make a new signin request",
+          });
+      }
+
+      const user = await refreshToken.getUser();
+      const newAccessToken = jwt.sign({ id: user.id }, config.secret, {
+        expiresIn: config.jwtExpiration,
+      });
+
+      return res.status(200).json({
+        accessToken: newAccessToken,
+        refreshToken: refreshToken.token,
+        message: "Refresh token is still active!",
+      });    
+    } catch (error) {
+      console.error("Error refreshing token:", error);
       return res
-        .status(403)
-        .json({ message: "Refresh token is not in the database!" });
+        .status(500)
+        .json({ message: "Internal server error while refreshing token" });
     }
-
-    if (RefreshToken.verifyExpiration(refreshToken)) {
-      await RefreshToken.destroy({ where: { id: refreshToken.id } });
-      return res
-        .status(403)
-        .json({
-          message:
-            "Refresh token has expired. Please make a new signin request",
-        });
-    }
-
-    const user = await refreshToken.getUser();
-    const newAccessToken = jwt.sign({ id: user.id }, config.secret, {
-      expiresIn: config.jwtExpiration,
-    });
-
-    return res.status(200).json({
-      accessToken: newAccessToken,
-      refreshToken: refreshToken.token,
-      message: "Refresh token is still active!",
-    });
-  } catch (error) {
-    console.error("Error refreshing token:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal server error while refreshing token" });
-  }
-};
+  };
 
 exports.signout = async (req, res) => {
   try {
@@ -242,9 +243,39 @@ console.log("userId==",userId)
 
 exports.getUser = async (req, res) => {
   try {
-  const authToken = req.headers.authorization.split(' ')[1];
-  // const authToken = req.headers["x-access-token"];
+  const auth = req.headers["x-access-token"];
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return res.status(401).send({ success: false, message: "No token provided!" });
+  }
+  const authToken = auth.split(' ')[1];
+  console.log("authgetUser===",authToken)
+  const decode = jwt.verify(authToken, config.secret);
+
+  const user = await sequelize.query(`SELECT * FROM users where id = :id`,
+    {
+      replacements: { id: decode.id },
+      type: sequelize.QueryTypes.SELECT,
+    }
+  );
+  
+  if (!user.length) {
+    return res.status(404).send({ success: false, message: "User not found" });
+  }
+
+  return res.status(200).send({ success: true, data: user[0], message: "Fetch Successfully!" });
+} catch (error) {
+  console.error('Error fetching user:', error);
+  return res.status(500).send({ success: false, message: "Internal server error" });
+}
+
+};
+
+exports.geAlltUser = async (req, res) => {
+  try {
+  const auth = req.headers.authorization || req.headers['x-auth-token'];
+  const authToken = auth.split(' ')[1];
   console.log("auth===",authToken)
+  
     if (!authToken) {
       return res.status(401).send({ success: false, message: "No token provided!" });
     }
@@ -260,8 +291,8 @@ exports.getUser = async (req, res) => {
   if (!user.length) {
     return res.status(404).send({ success: false, message: "User not found" });
   }
-
-  return res.status(200).send({ success: true, data: user[0], message: "Fetch Successfully!" });
+  const users = await User.findAll();
+  return res.status(200).send({ success: true, data: users, message: "Fetch Successfully!" });
 } catch (error) {
   console.error('Error fetching user:', error);
   return res.status(500).send({ success: false, message: "Internal server error" });
