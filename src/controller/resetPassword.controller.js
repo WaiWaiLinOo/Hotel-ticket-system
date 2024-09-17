@@ -4,55 +4,55 @@ const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const { sendForgetPasswordMail, mailTemplate } = require('../helpers/sendMail');
 const NumSaltRounds = Number(process.env.NO_OF_SALT_ROUNDS);
-const { tbl_user: User, resetToken : ResetToken } = db;
+const { tbl_user: User, resetToken: ResetToken } = db;
 
 exports.forgotPassword = async (req, res) => {
-    try {
-        const { email } = req.body;
+  try {
+    const { email } = req.body;
 
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                message: "Email is required"
-            });
-        }
-        const user = await User.findOne({
-            where: { email },
-        });
-        if (!user || user.length === 0) {
-          res.json({
-            success: false,
-            message: "Your are not registered!",
-          });
-        } else {
-          const token = crypto.randomBytes(20).toString("hex");
-          const resetToken = crypto
-            .createHash("sha256")
-            .update(token)
-            .digest("hex");
-          await ResetToken.destroy({ where : { user_id : user.id}})
-          await ResetToken.create({
-            user_id: user.id,
-            token: resetToken,
-            created_at: new Date(),
-            expires_at: new Date(Date.now() + 60 * 60 * 24 * 1000), // 1 day expiration
-          });
-    
-          const mailOption = {
-            email: email,
-            subject: "Forgot Password Link",
-            message: mailTemplate(
-              "We have received a request to reset your password. Please reset your password using the link below.",
-              `${process.env.FRONTEND_URL}/resetPassword?id=${user.id}&token=${resetToken}`,
-              "Reset Password"
-            ),
-          };
-          await sendForgetPasswordMail(mailOption);
-          res.json({
-            success: true,
-            message: "A password reset link has been sent to your email.",
-          });
-        }
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+    }
+    const user = await User.findOne({
+      where: { email },
+    });
+    if (!user || user.length === 0) {
+      res.json({
+        success: false,
+        message: "Your are not registered!",
+      });
+    } else {
+      const token = crypto.randomBytes(20).toString("hex");
+      const resetToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+      await ResetToken.destroy({ where: { user_id: user.id } })
+      await ResetToken.create({
+        user_id: user.id,
+        token: resetToken,
+        created_at: new Date(),
+        expires_at: new Date(Date.now() + 60 * 60 * 24 * 1000), // 1 day expiration
+      });
+
+      const mailOption = {
+        email: email,
+        subject: "Forgot Password Link",
+        message: mailTemplate(
+          "We have received a request to reset your password. Please reset your password using the link below.",
+          `${process.env.FRONTEND_URL}/resetPassword?id=${user.id}&token=${resetToken}`,
+          "Reset Password"
+        ),
+      };
+      await sendForgetPasswordMail(mailOption);
+      res.json({
+        success: true,
+        message: "A password reset link has been sent to your email.",
+      });
+    }
   } catch (err) {
     console.log(err);
     res.status(500).json({

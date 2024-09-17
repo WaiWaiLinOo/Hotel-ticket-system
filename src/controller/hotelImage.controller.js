@@ -5,7 +5,7 @@ const path = require('path');
 const response = require("../config/response");
 const { saveImage, getAllImages, getImageById, updateImage, getDeleteImageById } = require("../db/hotelImage");
 
-const uploadDir = path.join(__dirname,'..','..', 'uploads');
+const uploadDir = path.join(__dirname, '..', '..', 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
@@ -107,8 +107,8 @@ exports.getAllImagesData = async (req, res) => {
 };
 
 exports.getImageDataById = async (req, res) => {
-  const id = req.params.id;
   try {
+    const id = req.params.id;
     const data = await getImageById(id);
     res.json(
       response({
@@ -152,9 +152,9 @@ exports.updatedDataImage = async (req, res) => {
 };
 
 exports.deleteImageDataById = async (req, res) => {
-  const id = req.params.id;
-  console.log("iddeltete>>>===",id)
   try {
+    const id = req.params.id;
+    console.log("iddeltete>>>===", id)
     const data = await getDeleteImageById(id, uploadDir);
     res.json(
       response({
@@ -170,10 +170,10 @@ exports.deleteImageDataById = async (req, res) => {
 };
 
 exports.deleteImageDataByIds = async (req, res) => {
-  console.log("re===",req.body.map(value =>value.id))
+  console.log("re===", req.body.map(value => value.id))
   const ids = req.body.map(value => value.id);
   console.log("ids to delete>>>===", ids);
-  
+
   if (!Array.isArray(ids) || ids.length === 0) {
     return res.status(400).json({ success: false, message: "Invalid IDs array" });
   }

@@ -296,7 +296,15 @@ exports.geAlltUser = async (req, res) => {
   const users = await User.findAll();
   return res.status(200).send({ success: true, data: users, message: "Fetch Successfully!" });
 } catch (error) {
-  console.error('Error fetching user:', error);
+  console.error('Error fetching user:', error,"\n==",error.name);
+  if(error.name === "TokenExpiredError"){
+    return res.status(401).send({
+      success: error,
+      status: 401,
+      message: "Token expired. Please log in again.",
+      redirect: "/login"
+    })
+  }
   return res.status(500).send({ success: false, message: "Internal server error" });
 }
 

@@ -33,8 +33,8 @@ exports.getAllControllerTownship = async (req, res) => {
 };
 
 exports.getHotelDataById = async (req, res) => {
-  const id = req.params.id;
   try {
+    const id = req.params.id;
     const data = await getHotelById(id);
     res.json(
       response({
@@ -50,8 +50,8 @@ exports.getHotelDataById = async (req, res) => {
 };
 
 exports.createHotelList = async (req, res) => {
-  var hotel = req.body;
   try {
+    var hotel = req.body;
     const hotelData = await getCreateHotel(hotel);
     res.json({
       success: true,
@@ -65,9 +65,9 @@ exports.createHotelList = async (req, res) => {
 };
 
 exports.updateHotelList = async (req, res) => {
-  var hotel = req.body;
-  console.log("hotel==", hotel);
   try {
+    var hotel = req.body;
+    console.log("hotel==", hotel);
     const hotelData = await getUpdateHotel(hotel);
     res.json({
       success: true,
@@ -81,9 +81,9 @@ exports.updateHotelList = async (req, res) => {
 };
 
 exports.deleteHotelDataById = async (req, res) => {
-  const id = req.params.id;
-  console.log("iddeltete>>>===",id)
   try {
+    const id = req.params.id;
+    console.log("iddeltete>>>===",id)
     const data = await getDeleteHotelById(id);
     res.json(
       response({
