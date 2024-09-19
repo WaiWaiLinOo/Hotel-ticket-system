@@ -1,5 +1,6 @@
 const db = require("../config/db_config");
 const config = require("../config/auth.config");
+const {getCurrentUser} = require("../route/middleware")
 const sequelize = db.sequelize;
 const multer = require("multer");
 const { v4: uuidv4 } = require('uuid');
@@ -245,83 +246,52 @@ console.log("userId==",userId)
 
 exports.getUser = async (req, res) => {
   try {
-  const auth = req.headers["x-access-token"];
-  if (!auth || !auth.startsWith('Bearer ')) {
-    return res.status(401).send({ success: false, message: "No token provided!" });
-  }
-  const authToken = auth.split(' ')[1];
-  console.log("authgetUser===",authToken)
-  const decode = jwt.verify(authToken, config.secret);
-
-  const user = await sequelize.query(`SELECT * FROM users where id = :id`,
-    {
-      replacements: { id: decode.id },
-      type: sequelize.QueryTypes.SELECT,
+    const { id } = await getCurrentUser(req, res);
+    const user = await sequelize.query(`SELECT * FROM users where id = :id`,
+      {
+        replacements: { id: id },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+    if (!user.length) {
+      return res.status(404).send({ success: false, message: "User not found" });
     }
-  );
-  
-  if (!user.length) {
-    return res.status(404).send({ success: false, message: "User not found" });
+    return res.status(200).send({ success: true, data: user[0], message: "Fetch Successfully!" });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return res.status(500).send({ success: false, message: "Internal server error" });
   }
-
-  return res.status(200).send({ success: true, data: user[0], message: "Fetch Successfully!" });
-} catch (error) {
-  console.error('Error fetching user:', error);
-  return res.status(500).send({ success: false, message: "Internal server error" });
-}
-
 };
 
 exports.geAlltUser = async (req, res) => {
   try {
-  const auth = req.headers.authorization || req.headers['x-auth-token'];
-  const authToken = auth.split(' ')[1];
-  console.log("auth===",authToken)
-  
-    if (!authToken) {
-      return res.status(401).send({ success: false, message: "No token provided!" });
+    const { id } = await getCurrentUser(req, res);
+    const user = await sequelize.query(`SELECT * FROM users where id = :id`,
+      {
+        replacements: { id: id },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+    if (!user.length) {
+      return res.status(404).send({ success: false, message: "User not found" });
     }
-  const decode = jwt.verify(authToken, config.secret);
-
-  const user = await sequelize.query(`SELECT * FROM users where id = :id`,
-    {
-      replacements: { id: decode.id },
-      type: sequelize.QueryTypes.SELECT,
-    }
-  );
-  
-  if (!user.length) {
-    return res.status(404).send({ success: false, message: "User not found" });
+    const users = await User.findAll();
+    return res.status(200).send({ success: true, data: users, message: "Fetch Successfully!" });
+  } catch (error) {
+    return res.status(500).send({ success: false, message: "Internal server error" });
   }
-  const users = await User.findAll();
-  return res.status(200).send({ success: true, data: users, message: "Fetch Successfully!" });
-} catch (error) {
-  console.error('Error fetching user:', error,"\n==",error.name);
-  if(error.name === "TokenExpiredError"){
-    return res.status(401).send({
-      success: error,
-      status: 401,
-      message: "Token expired. Please log in again.",
-      redirect: "/login"
-    })
-  }
-  return res.status(500).send({ success: false, message: "Internal server error" });
-}
 
 };
 
 exports.updateProfile = async (req, res) => {
 
-  try{
+  try {
     const errors = validationResult(req);
-    if(!errors.isEmpty()){
+    if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-
-    const authToken = req.headers.authorization.split(' ')[1];
-    const decoded = jwt.verify(authToken, config.secret);
-
-    var sql = '',data;
+    const { id } = await getCurrentUser(req, res);
+    var sql = '', data;
 
     // if( req.file != undefined){
     //   sql = `UPDATE users SET name = ? , email = ?, image = ?, where id=?`;
@@ -340,15 +310,15 @@ exports.updateProfile = async (req, res) => {
     // });
     if (req.file !== undefined) {
       sql = `UPDATE users SET username = :username, email = :email, image = :image WHERE id = :id`;
-      data = { username: req.body.username, email: req.body.email, image: '/upload/' + req.file.filename, id: decoded.id };
+      data = { username: req.body.username, email: req.body.email, image: '/upload/' + req.file.filename, id: id };
     } else {
       sql = `UPDATE users SET username = :username, email = :email WHERE id = :id`;
-      data = { username: req.body.username, email: req.body.email, id: decoded.id };
+      data = { username: req.body.username, email: req.body.email, id: id };
     }
-  
+
     await sequelize.query(sql, { replacements: data, type: sequelize.QueryTypes.UPDATE });
     res.status(200).send({ msg: "Profile Updated Successfully!" });
-  }catch(error){
-    return res.status(400).json({ msg : error.message });
+  } catch (error) {
+    return res.status(400).json({ msg: error.message });
   }
 };
