@@ -120,61 +120,65 @@ exports.signup = async (req, res) => {
 };
 
 exports.signin = (req, res) => {
-  User.findOne({
-    include: [{ model: db.tbl_role }],
-    where: {
-      email: req.body.email,
-    },
-  })
-    .then(async (user) => {
-      if (!user) {
-        return res.status(404).send({ message: "User Not found." });
-      }
-      // compare hashed password
-      const passwordIsValid = bcrypt.compareSync(
-        req.body.password,
-        user.password
-      );
-
-      if (!passwordIsValid) {
-        return res.status(401).send({
-          success: false,
-          accessToken: null,
-          message: "Invalid Password!",
-        });
-      }
-      // create a jwt token
-      const token = jwt.sign({ id: user.id }, config.secret, {
-        expiresIn: config.jwtExpiration,
-      });
-
-      let refreshToken = await RefreshToken.createToken(user);
-      console.log("role====", user,"\nrefreshtoken",refreshToken);
-
-      const authorities = user.role.name.toUpperCase();
-      console.log("rolesquh==",user.role.name.toUpperCase(),authorities)  
-
-      res.status(200).send({
-        success: true,
-        msg: "Logged In",
-        user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        password: user.password,
-        phone: user.phone,
-        role_id: user.role_id,
-        active: user.active,
-        roles: authorities,
-        accessToken: token,
-        refreshToken: refreshToken,
-        image: user.image
+  try{
+    User.findOne({
+      include: [{ model: db.tbl_role }],
+      where: {
+        email: req.body.email,
+      },
+    })
+      .then(async (user) => {
+        if (!user) {
+          return res.status(404).send({ message: "User Not found Email" });
         }
+        // compare hashed password
+        const passwordIsValid = bcrypt.compareSync(
+          req.body.password,
+          user.password
+        );
+  
+        if (!passwordIsValid) {
+          return res.status(401).send({
+            success: false,
+            accessToken: null,
+            message: "Invalid Password!",
+          });
+        }
+        // create a jwt token
+        const token = jwt.sign({ id: user.id }, config.secret, {
+          expiresIn: config.jwtExpiration,
+        });
+  
+        let refreshToken = await RefreshToken.createToken(user);
+        console.log("role====", user,"\nrefreshtoken",refreshToken);
+  
+        const authorities = user.role.name.toUpperCase();
+        console.log("rolesquh==",user.role.name.toUpperCase(),authorities)  
+  
+        res.status(200).send({
+          success: true,
+          msg: "Logged In",
+          user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          password: user.password,
+          phone: user.phone,
+          role_id: user.role_id,
+          active: user.active,
+          roles: authorities,
+          accessToken: token,
+          refreshToken: refreshToken,
+          image: user.image
+          }
+        });
+      }).catch((err) => {
+        console.log("error for signin==",err.message)
+        res.status(500).send({ message: err.message });
       });
-    }).catch((err) => {
-      console.log("error for signin==",err.message)
-      res.status(500).send({ message: err.message });
-    });
+  }catch(e){
+    console.log('error par',e)
+  }
 };
 
 exports.refreshToken = async (req, res) => {
